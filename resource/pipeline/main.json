@@ -1,0 +1,25 @@
+{
+  "开始测试": {
+    "recognition": "DirectHit",
+    "action": "DoNothing",
+    "next": [
+      "点击执行保存"
+    ],
+    "timeout": 15000
+  },
+  "点击执行保存": {
+    "recognition": "OCR",
+    "expected": "执行保存",
+    "action": "Click",
+    "post_delay": 500,
+    "next": [
+      "确认保存成功"
+    ],
+    "timeout": 12000
+  },
+  "确认保存成功": {
+    "recognition": "OCR",
+    "expected": "保存成功",
+    "action": "DoNothing"
+  }
+}
