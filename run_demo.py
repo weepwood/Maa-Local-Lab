@@ -169,6 +169,11 @@ def main(argv=None):
 
 
 if __name__ == "__main__":
+    # PyInstaller 的嵌入式 Python 可能无视 PYTHONUTF8 并采用 cp1252。
+    # 在任何中文日志输出之前显式设定编码。
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     if len(sys.argv) > 1 and sys.argv[1] == "--demo-ui":
         # PyInstaller 必须在静态导入图中看见 demo_app / tkinter。
         import demo_app
