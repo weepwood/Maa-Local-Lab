@@ -1,0 +1,125 @@
+name: Windows 自动构建与发布
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Windows x64 安装版与便携版
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: 检出项目
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: 安装 Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: x64
+
+      - name: 配置 Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: 缓存 Rust 编译
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - name: Python 依赖和编译检查
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+          python -m py_compile run_demo.py demo_app.py scripts/stage_windows.py
+
+      - name: 冻结 MaaFramework 引擎
+        run: |
+          python -m PyInstaller --noconfirm --clean --onedir --console --name maa-runner --collect-all maa run_demo.py
+          if ($LASTEXITCODE -ne 0) { throw "PyInstaller 冻结失败" }
+
+      - name: 准备 Tauri 内置资源和 OCR
+        run: |
+          python scripts/stage_windows.py
+          if ($LASTEXITCODE -ne 0) { throw "资源打包失败" }
+
+      - name: 运行无 GUI 引擎自检
+        run: |
+          & "src-tauri/resources/engine/maa-runner.exe" --self-check --resource-root "src-tauri/resources/resource"
+          if ($LASTEXITCODE -ne 0) { throw "MaaFramework 引擎自检失败" }
+
+      - name: 安装前端依赖并检查
+        run: |
+          npm install --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw "npm install 失败" }
+          npm run build
+          if ($LASTEXITCODE -ne 0) { throw "前端构建失败" }
+
+      - name: 构建 Tauri Windows NSIS 安装程序
+        run: |
+          npx tauri build --bundles nsis
+          if ($LASTEXITCODE -ne 0) { throw "Tauri Windows 构建失败" }
+
+      - name: 生成 Windows 便携版 ZIP 和发布目录
+        run: |
+          New-Item -ItemType Directory -Force -Path release, release/portable | Out-Null
+          $app = "src-tauri/target/release/maa-local-lab.exe"
+          if (!(Test-Path $app)) { throw "未找到 Tauri 主程序" }
+          Copy-Item $app "release/portable/Maa Local Lab.exe"
+          Copy-Item "src-tauri/resources/engine" "release/portable/engine" -Recurse
+          Copy-Item "src-tauri/resources/resource" "release/portable/resource" -Recurse
+          Compress-Archive -Path "release/portable/*" -DestinationPath "release/Maa-Local-Lab-portable-win-x64.zip" -Force
+          $installers = @(Get-ChildItem "src-tauri/target/release/bundle/nsis" -Filter "*setup.exe" -File)
+          if ($installers.Count -eq 0) { throw "NSIS 安装程序不存在" }
+          Copy-Item $installers[0].FullName "release/Maa-Local-Lab-setup-win-x64.exe"
+          Get-ChildItem release -File | Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLowerInvariant())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content "release/SHA256SUMS.txt" -Encoding UTF8
+          Get-ChildItem release -File | Format-Table Name,Length
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: Maa-Local-Lab-Windows-x64
+          path: |
+            release/Maa-Local-Lab-setup-win-x64.exe
+            release/Maa-Local-Lab-portable-win-x64.zip
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: 发布 GitHub Release（main 快照 / v 标签正式版）
+        if: github.event_name != 'pull_request'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('snapshot-{0}', github.run_number) }}
+          name: ${{ startsWith(github.ref, 'refs/tags/v') && format('Maa Local Lab {0}', github.ref_name) || format('Maa Local Lab 自动构建 #{0}', github.run_number) }}
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            release/Maa-Local-Lab-setup-win-x64.exe
+            release/Maa-Local-Lab-portable-win-x64.zip
+            release/SHA256SUMS.txt

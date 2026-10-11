@@ -26,8 +26,23 @@
   "bundle": {
     "active": true,
     "targets": [
-      "nsis",
-      "msi"
-    ]
+      "nsis"
+    ],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png"
+    ],
+    "resources": {
+      "resources/": ""
+    },
+    "windows": {
+      "nsis": {
+        "displayLanguageSelector": false,
+        "languages": [
+          "SimpChinese",
+          "English"
+        ]
+      }
+    }
   }
 }
