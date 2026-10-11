@@ -2,7 +2,7 @@ Unicode true
 !include "MUI2.nsh"
 
 Name "Maa Local Lab (MXU)"
-OutFile "${__FILEDIR__}\..\release\Maa-Local-Lab-MXU-setup-win-x64.exe"
+OutFile "..\release\Maa-Local-Lab-MXU-setup-win-x64.exe"
 InstallDir "$LOCALAPPDATA\Programs\Maa Local Lab"
 RequestExecutionLevel user
 ShowInstDetails show
@@ -16,7 +16,7 @@ ShowUninstDetails show
 
 Section "安装" SEC_MAIN
     SetOutPath "$INSTDIR"
-    File /r "${__FILEDIR__}\..\release\portable\*"
+    File /r "..\release\portable\*"
     WriteUninstaller "$INSTDIR\Uninstall.exe"
     CreateShortCut "$SMPROGRAMS\Maa Local Lab.lnk" "$INSTDIR\Maa Local Lab.exe"
 SectionEnd
