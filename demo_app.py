@@ -17,6 +17,10 @@ def default_result() -> Path:
 
 def spawn_detached(args: argparse.Namespace) -> None:
     """MXU 需要预任务及时退出，目标窗口则在独立子进程保持运行。"""
+    import ctypes
+    import time
+    if ctypes.windll.user32.FindWindowW(None, "MAA LOCAL LAB - MXU"):
+        return  # 已有同名测试窗口，避免重复启动
     exe = Path(sys.executable).resolve()
     cmd = [str(exe)]
     if not getattr(sys, "frozen", False):
@@ -32,6 +36,12 @@ def spawn_detached(args: argparse.Namespace) -> None:
         close_fds=True,
         creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
     )
+    # 防止 Controller 连接时目标窗体尚未出现。
+    for _ in range(100):
+        if ctypes.windll.user32.FindWindowW(None, "MAA LOCAL LAB - MXU"):
+            return
+        time.sleep(0.1)
+    raise RuntimeError("实验窗口在 10 秒内未就绪")
 
 
 def main(argv=None):

@@ -85,9 +85,10 @@ def stage(mxu: Path, maafw: Path, target: Path, destination: Path, ocr: Path | N
     (destination / "README.txt").write_text(
         "Maa Local Lab — MXU GUI\n"
         "1. 运行 'Maa Local Lab.exe'。\n"
-        "2. 选择 Windows 实验窗口和实验资源，勾选'自动点击并验证保存'。\n"
-        "3. 点击运行。预任务将自动打开隔离测试窗口。\n"
-        "4. 可在 MXU 的实时截图与日志面板查看结果；输出保存在 debug/lab-saved.json。\n"
+        "2. 选择 Windows 实验窗口和实验资源。\n"
+        "3. 在 MXU 的「添加任务」（+）中加入并启用「自动启动实验窗口」预任务。\n"
+        "4. 点击运行；也可以先双击 tools/maa-lab-target.exe 手动启动目标。\n"
+        "5. 在 MXU 的截图和日志中查看执行结果；debug/lab-saved.json 是本地凭据。\n"
         "源代码及许可证请查看 licenses 目录。\n",
         encoding="utf-8",
     )

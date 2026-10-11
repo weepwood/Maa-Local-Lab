@@ -6,7 +6,7 @@
   "version": "0.3.0",
   "github": "https://github.com/weepwood/Maa-Local-Lab",
   "description": "Windows 本地视觉自动化实验：使用 MXU 的原生 MaaFramework Win32 控制器、任务管理、截图和日志，识别按钮并验证界面状态。",
-  "welcome": "首次运行：选择「Windows 实验窗口」控制器和「实验资源」，勾选「自动点击并验证保存」，然后点击开始。程序会通过预任务自动打开隔离试验窗口。实验数据只保存在本机。",
+  "welcome": "首次使用：默认已有「自动点击并验证保存」任务。请在 MXU「添加任务」（+）面板中另外加入并启用「自动启动实验窗口」预任务，然后点击开始。也可以手动打开 tools/maa-lab-target.exe 后再运行点击任务。",
   "license": "界面：MXU AGPL-3.0；自动化库：MaaFramework LGPL-3.0。详见软件发行包 licenses/ 与 THIRD_PARTY.md。",
   "controller": [
     {
