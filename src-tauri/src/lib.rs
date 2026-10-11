@@ -161,6 +161,25 @@ fn build_runner(app: &tauri::AppHandle) -> Result<Command, String> {
     Err("未发现打包的 MaaFramework 执行器。请重新下载安装完整包".into())
 }
 
+// stdout / stderr 的 handle 类型不同，用泛型分别启动日志消费线程。
+fn forward_output<R: std::io::Read + Send + 'static>(
+    app: &tauri::AppHandle,
+    stream: &'static str,
+    source: Option<R>,
+) {
+    if let Some(pipe) = source {
+        let handle = app.clone();
+        thread::spawn(move || {
+            for line in BufReader::new(pipe).lines().map_while(Result::ok) {
+                handle.emit("task-log", serde_json::json!({
+                    "stream": stream,
+                    "message": line
+                })).ok();
+            }
+        });
+    }
+}
+
 #[tauri::command]
 fn run_demo(
     app: tauri::AppHandle,
@@ -202,18 +221,8 @@ fn run_demo(
     drop(running);
 
     app.emit("task-status", "running").ok();
-    for (stream, source) in [("stdout", stdout), ("stderr", stderr)] {
-        if let Some(pipe) = source {
-            let handle = app.clone();
-            thread::spawn(move || {
-                for line in BufReader::new(pipe).lines().map_while(Result::ok) {
-                    handle.emit("task-log", serde_json::json!({
-                        "stream": stream, "message": line
-                    })).ok();
-                }
-            });
-        }
-    }
+    forward_output(&app, "stdout", stdout);
+    forward_output(&app, "stderr", stderr);
 
     thread::spawn(move || loop {
         thread::sleep(Duration::from_millis(400));
