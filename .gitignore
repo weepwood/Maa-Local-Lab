@@ -10,3 +10,6 @@ src-tauri/resources/resource/
 resource/model/ocr/*.onnx
 resource/model/ocr/keys.txt
 .env
+
+.cache/
+release/
