@@ -3,6 +3,10 @@ dist/
 .venv/
 runs/
 __pycache__/
+*.pyc
 src-tauri/target/
+src-tauri/resources/engine/
+src-tauri/resources/resource/
 resource/model/ocr/*.onnx
 resource/model/ocr/keys.txt
+.env
