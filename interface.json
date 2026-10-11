@@ -1,0 +1,82 @@
+{
+  "interface_version": 2,
+  "name": "MaaLocalLab",
+  "label": "Maa Local Lab",
+  "title": "Maa Local Lab · MXU",
+  "version": "0.3.0",
+  "github": "https://github.com/weepwood/Maa-Local-Lab",
+  "description": "Windows 本地视觉自动化实验：使用 MXU 的原生 MaaFramework Win32 控制器、任务管理、截图和日志，识别按钮并验证界面状态。",
+  "welcome": "首次运行：选择「Windows 实验窗口」控制器和「实验资源」，勾选「自动点击并验证保存」，然后点击开始。程序会通过预任务自动打开隔离试验窗口。实验数据只保存在本机。",
+  "license": "界面：MXU AGPL-3.0；自动化库：MaaFramework LGPL-3.0。详见软件发行包 licenses/ 与 THIRD_PARTY.md。",
+  "controller": [
+    {
+      "name": "Win32Lab",
+      "label": "Windows 实验窗口",
+      "type": "Win32",
+      "description": "测试对象为 Tkinter 隔离窗口，不会操作其他业务软件。",
+      "display_raw": true,
+      "win32": {
+        "class_regex": ".*",
+        "window_regex": "^MAA LOCAL LAB - MXU$",
+        "screencap": "ScreenDC",
+        "mouse": "Seize",
+        "keyboard": "Seize"
+      }
+    }
+  ],
+  "resource": [
+    {
+      "name": "Lab",
+      "label": "实验资源",
+      "description": "内置保存按钮识别及保存成功校验流程",
+      "path": [
+        "resource"
+      ],
+      "controller": [
+        "Win32Lab"
+      ]
+    }
+  ],
+  "pretask": [
+    {
+      "name": "StartLabTarget",
+      "label": "自动启动实验窗口",
+      "description": "在连接 Win32 控制器之前自动启动内置 Tkinter 测试程序。",
+      "exec": "./tools/maa-lab-target.exe",
+      "args": [
+        "--spawn"
+      ],
+      "controller": [
+        "Win32Lab"
+      ],
+      "resource": [
+        "Lab"
+      ]
+    }
+  ],
+  "group": [
+    {
+      "name": "Basic",
+      "label": "基础实验",
+      "description": "验证截图、OCR 识别、鼠标点击和状态检测"
+    }
+  ],
+  "task": [
+    {
+      "name": "ClickAndVerify",
+      "label": "自动点击并验证保存",
+      "description": "识别「执行保存」按钮并点击，等待「保存成功」。结果同时写入本机 debug/lab-saved.json。",
+      "entry": "开始测试",
+      "default_check": true,
+      "group": "Basic"
+    },
+    {
+      "name": "VerifySaved",
+      "label": "仅检测保存状态",
+      "description": "不点击任何按钮，仅识别当前窗口上的「保存成功」。",
+      "entry": "检查保存状态",
+      "default_check": false,
+      "group": "Basic"
+    }
+  ]
+}

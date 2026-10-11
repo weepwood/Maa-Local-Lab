@@ -5,19 +5,19 @@
     "next": [
       "点击执行保存"
     ],
-    "timeout": 15000
+    "timeout": 20000
   },
   "点击执行保存": {
     "recognition": "OCR",
     "expected": "执行保存",
     "action": "Click",
-    "post_delay": 500,
+    "post_delay": 700,
     "next": [
-      "确认保存成功"
+      "检查保存状态"
     ],
-    "timeout": 12000
+    "timeout": 15000
   },
-  "确认保存成功": {
+  "检查保存状态": {
     "recognition": "OCR",
     "expected": "保存成功",
     "action": "DoNothing"
