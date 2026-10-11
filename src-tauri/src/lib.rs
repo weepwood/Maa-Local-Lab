@@ -183,6 +183,8 @@ fn run_demo(
     let data = app_data(&app)?;
     let reports = data.join("runs");
     fs::create_dir_all(&reports).map_err(|e| e.to_string())?;
+    cmd.env("PYTHONUTF8", "1")
+        .env("PYTHONIOENCODING", "utf-8");
     cmd.arg("--mode").arg(mode)
         .arg("--resource-root").arg(&resource)
         .arg("--pipeline-file").arg(pipeline)
